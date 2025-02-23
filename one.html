@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="one.css">
+    <title>MSTC Lucky Spin</title>
+</head>
+<body>
+    <div id="customModal" style="display: none; flex-direction: column; justify-content: center; align-items: center; position: fixed; width: 40%; height: 40%; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; font-size: 2rem;  
+    background: white; border: 1px solid black; border-radius: 2%; box-shadow: 2px 2px 10px gray; text-align: center;">
+        Congratulations! You recieved<p id="selectedItem" style="color: blue; margin-top: 2%;"></p>
+        <button style="width: 30%; height: 20%; font-size: 2rem; margin: 5%; cursor: pointer;" onclick="closeModal()">Recieve</button>
+        <button style="position: absolute; width: 3rem; height: 3rem; border: 1px solid black; border-radius: 50%; font-size: 2rem; top: 2%; right: 2%; background-color: red; cursor: pointer;" onclick="closeModal()">X</button>
+    </div>
+    <div class="mainbox" id="mainbox">
+        <div class="arrow"></div>
+        <div class="box" id="box">
+            <div class="box1">
+                <span class="font span1"><h5>Smart TV 34in</h5></span>
+                <span class="font span2"><h5>Asus ROG</h5></span>
+                <span class="font span3"><h5>Air Conditioner</h5></span>
+                <span class="font span4"><h5>Speaker Portable</h5></span>
+                <span class="font span5"><h5>Playstation 4 Slim</h5></span>
+            </div>
+            <div class="box2">
+                <span class="font span1"><h5>Zonk</h5></span>
+                <span class="font span2"><h5>Headset Gaming</h5></span>
+                <span class="font span3"><h5>Ipad Mini 5</h5></span>
+                <span class="font span4"><h5>Camera Sport Action</h5></span>
+                <span class="font span5"><h5>Drone Mini T67</h5></span>
+            </div>
+            <button class="spin" onclick="spin()">SPIN</button>
+        </div>
+    </div>
+    <audio
+     src="assets/applause.mp3"
+     controls="controls"
+     id="applause"
+     type="audion/mp3"
+     ></audio>
+    <audio
+     src="assets/wheel.mp3"
+     controls="controls"
+     id="wheel"
+     type="audion/mp3"
+     ></audio>
+
+     <script src="one.js"></script>
+</body>
+</html>

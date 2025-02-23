@@ -1,66 +1,155 @@
-function shuffle(array){
-    let currentIndex = array.length, randomIndex;
-    while(0 !== currentIndex){
-        randomIndex = Math.floor(Math.random() * currentIndex);
-        currentIndex--;
-        [array[currentIndex], array[randomIndex]] = [
-            array[currentIndex],
-            array[currentIndex]
-        ];
+function randomColor(){
+    r = Math.floor(Math.random() * 255);
+    g = Math.floor(Math.random() * 255);
+    b = Math.floor(Math.random() * 255);
+    return {r,g,b}
+}
+function toRad(deg){
+    return deg * (Math.PI / 180.0);
+}
+function randomRange(min,max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+function easeOutSine(x) {
+    return Math.sin((x * Math.PI) / 2);
+}
+// get percent between 2 number
+function getPercent(input,min,max){
+    return (((input - min) * 100) / (max - min))/100
+}
+
+const canvas = document.getElementById("canvas")
+const ctx = canvas.getContext("2d")
+const width = document.getElementById("canvas").width
+const height = document.getElementById("canvas").height
+
+const centerX = width/2
+const centerY = height/2
+const radius = width/2
+
+let items = document.getElementsByTagName("textarea")[0].value.split("\n");
+
+let currentDeg = 0
+let step = 360/items.length
+let colors = []
+let itemDegs = {}
+
+for(let i = 0 ; i < items.length + 1;i++){
+    colors.push(randomColor())
+}
+
+function createWheel(){
+    items = document.getElementsByTagName("textarea")[0].value.split("\n");
+    step = 360/items.length
+    colors = []
+    for(let i = 0 ; i < items.length + 1;i++){
+        colors.push(randomColor())
     }
-    return array;
+    draw()
+}
+draw()
+
+function draw(){
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, toRad(0), toRad(360))
+    ctx.fillStyle = `rgb(${33},${33},${33})`
+    ctx.lineTo(centerX, centerY);
+    ctx.fill()
+
+    let startDeg = currentDeg;
+    for(let i = 0 ; i < items.length; i++, startDeg += step){
+        let endDeg = startDeg + step
+
+        color = colors[i]
+        let colorStyle = `rgb(${color.r},${color.g},${color.b})`
+
+        ctx.beginPath();
+        rad = toRad(360/step);
+        ctx.arc(centerX, centerY, radius - 2, toRad(startDeg), toRad(endDeg))
+        let colorStyle2 = `rgb(${color.r - 30},${color.g - 30},${color.b - 30})`
+        ctx.fillStyle = colorStyle2
+        ctx.lineTo(centerX, centerY);
+        ctx.fill()
+
+        ctx.beginPath();
+        rad = toRad(360/step);
+        ctx.arc(centerX, centerY, radius - 30, toRad(startDeg), toRad(endDeg))
+        ctx.fillStyle = colorStyle
+        ctx.lineTo(centerX, centerY);
+        ctx.fill()
+
+        // draw text
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(toRad((startDeg + endDeg)/2));
+        ctx.textAlign = "center";
+        if(color.r > 150 || color.g > 150 || color.b > 150){
+            ctx.fillStyle = "#000";
+        }
+        else{
+            ctx.fillStyle = "#fff";
+        }
+        ctx.font = 'bold 24px serif';
+        ctx.fillText(items[i], 130, 10);
+        ctx.restore();
+
+        itemDegs[items[i]] = 
+            {
+            "startDeg": startDeg,
+            "endDeg" : endDeg
+            }
+        
+
+        // check winner
+        if(startDeg%360 < 360 && startDeg%360 > 270  && endDeg % 360 > 0 && endDeg%360 < 90 ){
+            // document.getElementById("winner").innerHTML = items[i]
+            
+            document.getElementById("selectedItem").textContent = items[i]
+            
+        }
+        
+    }
+}
+
+
+let speed = 0
+let maxRotation = randomRange(360* 3, 360 * 6)
+let pause = false
+function animate(){
+    if(pause){
+        return
+    }
+    speed = easeOutSine(getPercent(currentDeg ,maxRotation ,0)) * 20
+    if(speed < 0.01){
+        speed = 0
+        pause = true
+    }
+    currentDeg += speed
+    draw()
+    window.requestAnimationFrame(animate);
 }
 
 function spin(){
-    wheel.play();
-    const box = document.getElementById("box");
-    const element = document.getElementById("mainbox");
-    let SelectedItem = "";
+    if(speed != 0){
+        return
+    }
 
-    let AC = shuffle([1890, 2250, 2610]);
-    let Camera = shuffle([1850, 2210, 2570]);
-    let Zonk = shuffle([1770, 2130, 2490]);
-    let PS = shuffle([1810, 2170, 2530]);
-    let Headset = shuffle([1750, 2110, 2470]);
-    let Drone = shuffle([1630, 1990, 2350]);
-    let ROG = shuffle([1570, 1930, 2290]);
+    maxRotation = 0;
+    currentDeg = 0
+    createWheel()
+    draw();
 
-    let results = shuffle([
-        AC[0],
-        Camera[0],
-        Zonk[0],
-        PS[0],
-        Headset[0],
-        Drone[0],
-        ROG[0]
-    ]);
-
-    if(AC.includes(results[0])) SelectedItem = "Air Conditioner";
-    if(Camera.includes(results[0])) SelectedItem = "Camera Sport Action";
-    if(Zonk.includes(results[0])) SelectedItem = "💣";
-    if(PS.includes(results[0])) SelectedItem = "Playstation 4 Slim";
-    if(Headset.includes(results[0])) SelectedItem = "Headset Gaming";
-    if(Drone.includes(results[0])) SelectedItem = "Drone Mini";
-    if(ROG.includes(results[0])) SelectedItem = "Laptop Asus ROG";
-
-    box.style.setProperty("transition", "all ease 5s");
-
-    box.style.transform = "rotate(" + results[0] + "deg)";
-    element.classList.remove("animate");
+    
+    maxRotation = (360 * 6) - itemDegs['cat'].endDeg + 10
+    itemDegs = {}
+    console.log("max",maxRotation)
+    console.log(itemDegs);
+    pause = false
+    window.requestAnimationFrame(animate);
     setTimeout(function(){
-        element.classList.add("animate");
-    }, 5000);
-
-    setTimeout(function(){
-        applause.play();
+        // applause.play();
         document.getElementById("customModal").style.display = "flex";
-        document.getElementById("selectedItem").textContent = SelectedItem
-    }, 6000)
-
-    setTimeout(function(){
-        box.style.setProperty("transition", "initial");
-        box.style.transform = "rotate(90deg)";
-    }, 6000)
+    }, 8000)
 }
 
 function closeModal() {
