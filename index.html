@@ -5,36 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
     <title>Document</title>
+    <script src="xlsx.full.min.js"></script>
 </head>
 <body>
-    <div id="customModal" style="display: flex; flex-direction: column; justify-content: center; align-items: center; position: fixed; width: 40%; height: 40%; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; font-size: 2rem;  
+    <div id="customModal" style="display: none; flex-direction: column; justify-content: center; align-items: center; position: fixed; width: 40%; height: 40%; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2; font-size: 2rem;  
     background: white; border: 1px solid black; border-radius: 2%; box-shadow: 2px 2px 10px gray; text-align: center;">
         Congratulations! You recieved<p id="selectedItem" style="color: blue; margin-top: 2%;"></p>
-        <button style="width: 30%; height: 20%; font-size: 2rem; margin: 5%; cursor: pointer;" onclick="closeModal()">Recieve</button>
+        <button style="width: 30%; height: 20%; font-size: 2rem; margin: 5%; cursor: pointer;" onclick="recieveModal()">Recieve</button>
         <button style="position: absolute; width: 3rem; height: 3rem; border: 1px solid black; border-radius: 50%; font-size: 2rem; top: 2%; right: 2%; background-color: red; cursor: pointer;" onclick="closeModal()">X</button>
     </div>
+        <input type="file" id="uploadExcel" accept=".xlsx, .xls">
     <!-- <div class="header">
         <h1>WINNER</h1>
         <p id="winner">NONE</p>
     </div> -->
     <div class="wheel">
-        <canvas class="" id="canvas" width="500" height="500"></canvas>
-        <div class="center-circle" onclick="spin()">
-            <div class="triangle"></div>
+        <canvas class="" id="canvas" width="1000" height="1000"></canvas>
+        <!-- <canvas class="" id="canvas"></canvas> -->
+        <div class="center-circle" onclick="spin()">SPIN
+            <!-- <div class="triangle"></div> -->
         </div>
+        <div class="triangle"></div>
         
     </div>
-    <div class="inputArea" onchange="createWheel()">
-        <textarea rows="20" cols="30" >cat
-dog
-cow
-duck
-sheep
-goat
-bird
-neko
-chicken</textarea>
-    </div>
+    <audio
+     src="assets/applause.mp3"
+     controls="controls"
+     id="applause"
+     type="audion/mp3"
+     ></audio>
+    <audio
+     src="assets/wheel.mp3"
+     controls="controls"
+     id="wheel"
+     type="audion/mp3"
+     ></audio>
     <script src="script.js"></script>
 </body>
 </html>

@@ -27,22 +27,56 @@ const centerX = width/2
 const centerY = height/2
 const radius = width/2
 
-let items = document.getElementsByTagName("textarea")[0].value.split("\n");
+
+let excelData = []; // Store Excel data
+// Load data when page opens
+loadSavedData();
+// Load saved data from Local Storage (if available)
+function loadSavedData() {
+    const savedData = localStorage.getItem("excelData");
+    if (savedData) {
+        excelData = JSON.parse(savedData);
+    }
+}
+// Read Excel File
+document.getElementById('uploadExcel').addEventListener('change', function (event) {
+    let file = event.target.files[0];
+    let reader = new FileReader();
+
+    reader.onload = function (e) {
+        let data = new Uint8Array(e.target.result);
+        let workbook = XLSX.read(data, { type: 'array' });
+
+        let sheetName = workbook.SheetNames[0]; // Get first sheet
+        let sheet = workbook.Sheets[sheetName];
+
+        excelData = XLSX.utils.sheet_to_json(sheet); // Convert to JSON
+        saveData(); // Save to Local Storage
+    };
+
+    reader.readAsArrayBuffer(file);
+});
+
+// Save Data to Local Storage
+function saveData() {
+    localStorage.setItem("excelData", JSON.stringify(excelData));
+}
 
 let currentDeg = 0
-let step = 360/items.length
+let step = 360/excelData.length
 let colors = []
 let itemDegs = {}
+let recievedItem = "";
 
-for(let i = 0 ; i < items.length + 1;i++){
+for(let i = 0 ; i < excelData.length + 1;i++){
     colors.push(randomColor())
 }
 
 function createWheel(){
-    items = document.getElementsByTagName("textarea")[0].value.split("\n");
-    step = 360/items.length
+    // items = document.getElementsByTagName("textarea")[0].value.split("\n");
+    step = 360/excelData.length
     colors = []
-    for(let i = 0 ; i < items.length + 1;i++){
+    for(let i = 0 ; i < excelData.length + 1;i++){
         colors.push(randomColor())
     }
     draw()
@@ -57,7 +91,7 @@ function draw(){
     ctx.fill()
 
     let startDeg = currentDeg;
-    for(let i = 0 ; i < items.length; i++, startDeg += step){
+    for(let i = 0 ; i < excelData.length; i++, startDeg += step){
         let endDeg = startDeg + step
 
         color = colors[i]
@@ -89,24 +123,39 @@ function draw(){
         else{
             ctx.fillStyle = "#fff";
         }
-        ctx.font = 'bold 24px serif';
-        ctx.fillText(items[i], 130, 10);
+        ctx.font = 'bold 24px Pyidaungsu';
+        ctx.fillText(excelData[i].name, 270, 10);  // text places
         ctx.restore();
 
-        itemDegs[items[i]] = 
-            {
-            "startDeg": startDeg,
-            "endDeg" : endDeg
-            }
-        
-
         // check winner
-        if(startDeg%360 < 360 && startDeg%360 > 270  && endDeg % 360 > 0 && endDeg%360 < 90 ){
-            // document.getElementById("winner").innerHTML = items[i]
+        if( startDeg%360 > 90 &&  endDeg % 360 < 90 ){
+                
+            document.getElementById("selectedItem").textContent = excelData[i].name
+            recievedItem = excelData[i].name
             
-            document.getElementById("selectedItem").textContent = items[i]
+            // setTimeout(function(){
+            //     // applause.play();
+            //     document.getElementById("customModal").style.display = "flex";
+            // }, 6000)
             
-        }
+        } 
+
+        // if (excelData.length > 2){
+        //     // check winner
+        //     if(startDeg%360 < 360 && startDeg%360 > 270  && endDeg % 360 > 0 && endDeg%360 < 90 ){
+                
+        //         document.getElementById("selectedItem").textContent = excelData[i].name
+        //         recievedItem = excelData[i].name
+                
+        //     } 
+        // } else {
+        //     if(!(startDeg%360 < 180 &&  endDeg % 360 > 0 )){
+                
+        //         document.getElementById("selectedItem").textContent = excelData[i].name
+        //         recievedItem = excelData[i].name
+                
+        //     } 
+        // }
         
     }
 }
@@ -116,6 +165,7 @@ let speed = 0
 let maxRotation = randomRange(360* 3, 360 * 6)
 let pause = false
 function animate(){
+    
     if(pause){
         return
     }
@@ -123,8 +173,12 @@ function animate(){
     if(speed < 0.01){
         speed = 0
         pause = true
+        document.getElementById("customModal").style.display = "flex";
+        applause.play();
     }
     currentDeg += speed
+    // console.log(`Animation going at ${currentDeg} degree`)
+    // wheel.play();
     draw()
     window.requestAnimationFrame(animate);
 }
@@ -133,25 +187,25 @@ function spin(){
     if(speed != 0){
         return
     }
-
-    maxRotation = 0;
+    wheel.play();
+    // maxRotation = 0;
     currentDeg = 0
+    maxRotation = randomRange(360*3, 360*6)
     createWheel()
     draw();
-
-    
-    maxRotation = (360 * 6) - itemDegs['cat'].endDeg + 10
-    itemDegs = {}
-    console.log("max",maxRotation)
-    console.log(itemDegs);
     pause = false
     window.requestAnimationFrame(animate);
-    setTimeout(function(){
-        // applause.play();
-        document.getElementById("customModal").style.display = "flex";
-    }, 8000)
+    
 }
 
 function closeModal() {
     document.getElementById("customModal").style.display = "none";
+}
+
+function recieveModal() {
+    excelData = excelData.filter(data => data.name !== recievedItem); // Remove row
+    document.getElementById("customModal").style.display = "none";
+    localStorage.setItem("excelData", JSON.stringify(excelData));
+    createWheel()
+    draw();
 }

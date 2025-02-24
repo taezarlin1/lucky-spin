@@ -13,19 +13,33 @@ body{
 } */
 
 .wheel{
+    align-self: center;
     display: flex;
     justify-content: center;
     position: relative;
 }
+
 .center-circle{
-    width: 100px;
-    height: 100px;
-    border-radius: 60px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
     background-color: #fff;
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
+    text-align: center;
+    align-content: center;
+    cursor: pointer;
+    box-shadow: 0 5px 20px #000;
+    font-size: 3rem;
 }
+
+.center-circle:hover{
+    width: 210px;
+    height: 210px;
+    font-weight: bold;
+}
+
 .triangle{
     width: 0; 
     height: 0; 
@@ -34,7 +48,7 @@ body{
     border-right: 30px solid white; 
     position: absolute;
     top: 50%;
-    right: -220%;
+    right: 30%;
     transform: translateY(-50%);
 }
 textarea{
@@ -47,4 +61,7 @@ textarea{
     display: flex;
     justify-content: center;
     margin-top: 40px;
+}
+audio{
+    display: none;
 }

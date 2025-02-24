@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="xlsx.full.min.js"></script>
+</head>
+<body>
+    <h2>Upload Excel File</h2>
+    <input type="file" id="uploadExcel" accept=".xlsx, .xls">
+    <br><br>
+
+    <label>Enter ID to Delete:</label>
+    <input type="number" id="deleteIdInput" placeholder="Enter ID">
+    <button onclick="deleteRow()">Delete</button>
+
+    <h3>Updated Data:</h3>
+    <table id="dataTable" border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Country</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        let jsonData = []; // Store Excel data
+
+        // Load saved data from Local Storage (if available)
+        function loadSavedData() {
+            const savedData = localStorage.getItem("excelData");
+            if (savedData) {
+                jsonData = JSON.parse(savedData);
+                displayData();
+            }
+        }
+
+        // Read Excel File
+        document.getElementById('uploadExcel').addEventListener('change', function (event) {
+            let file = event.target.files[0];
+            let reader = new FileReader();
+
+            reader.onload = function (e) {
+                let data = new Uint8Array(e.target.result);
+                let workbook = XLSX.read(data, { type: 'array' });
+
+                let sheetName = workbook.SheetNames[0]; // Get first sheet
+                let sheet = workbook.Sheets[sheetName];
+
+                jsonData = XLSX.utils.sheet_to_json(sheet); // Convert to JSON
+                saveData(); // Save to Local Storage
+                displayData(); // Display data in table
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Save Data to Local Storage
+        function saveData() {
+            localStorage.setItem("excelData", JSON.stringify(jsonData));
+        }
+
+        // Display Data in Table
+        function displayData() {
+            let tableBody = document.querySelector("#dataTable tbody");
+            tableBody.innerHTML = ""; // Clear old data
+
+            jsonData.forEach(row => {
+                let tr = document.createElement("tr");
+                tr.innerHTML = `<td>${row.ID}</td><td>${row.Name}</td><td>${row.Age}</td><td>${row.Country}</td>`;
+                tableBody.appendChild(tr);
+            });
+
+            console.log(jsonData)
+        }
+
+        // Delete Row from Data
+        function deleteRow() {
+            let idToDelete = parseInt(document.getElementById("deleteIdInput").value);
+            if (isNaN(idToDelete)) {
+                alert("Please enter a valid ID!");
+                return;
+            }
+
+            let initialLength = jsonData.length;
+            jsonData = jsonData.filter(row => row.ID !== idToDelete); // Remove row
+
+            if (jsonData.length === initialLength) {
+                alert("ID not found!");
+            } else {
+                saveData(); // Save updated data
+                displayData(); // Update the table
+            }
+        }
+
+        // Load data when page opens
+        loadSavedData();
+    </script>
+</body>
+</html>
