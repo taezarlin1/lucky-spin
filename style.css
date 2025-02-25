@@ -48,7 +48,7 @@ body{
     border-right: 30px solid white; 
     position: absolute;
     top: 50%;
-    right: 30%;
+    right: 26%;
     transform: translateY(-50%);
 }
 textarea{
