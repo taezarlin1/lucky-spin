@@ -1,48 +1,32 @@
-function randomColor(){
-    r = Math.floor(Math.random() * 255);
-    g = Math.floor(Math.random() * 255);
-    b = Math.floor(Math.random() * 255);
-    return {r,g,b}
-}
-function toRad(deg){
-    return deg * (Math.PI / 180.0);
-}
-function randomRange(min,max){
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-function easeOutSine(x) {
-    return Math.sin((x * Math.PI) / 2);
-}
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const wheelWrapper = document.getElementById("wheel-wrapper");
 
-function easeOutExpo(x) {
-    return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
-}
+let excelData = [];
+let currentAngle = 0;
+let selectedItem = null;
 
-// get percent between 2 number
-function getPercent(input,min,max){
-    return (((input - min) * 100) / (max - min))/100
-}
-
-const canvas = document.getElementById("canvas")
-const ctx = canvas.getContext("2d")
-const width = document.getElementById("canvas").width
-const height = document.getElementById("canvas").height
-
-const centerX = width/2
-const centerY = height/2
-const radius = width/2
-
-
-let excelData = []; // Store Excel data
-// Load data when page opens
-loadSavedData();
-// Load saved data from Local Storage (if available)
+// Load saved data from Local Storage
 function loadSavedData() {
     const savedData = localStorage.getItem("excelData");
     if (savedData) {
         excelData = JSON.parse(savedData);
+        // shuffleData();
+        drawWheel();
     }
 }
+loadSavedData();
+
+// Shuffle the data
+function shuffleData() {
+    for (let i = excelData.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [excelData[i], excelData[j]] = [excelData[j], excelData[i]];
+    }
+    localStorage.setItem("excelData", JSON.stringify(excelData));
+    drawWheel();
+}
+
 // Read Excel File
 document.getElementById('uploadExcel').addEventListener('change', function (event) {
     let file = event.target.files[0];
@@ -52,186 +36,163 @@ document.getElementById('uploadExcel').addEventListener('change', function (even
         let data = new Uint8Array(e.target.result);
         let workbook = XLSX.read(data, { type: 'array' });
 
-        let sheetName = workbook.SheetNames[0]; // Get first sheet
+        let sheetName = workbook.SheetNames[0];
         let sheet = workbook.Sheets[sheetName];
 
-        excelData = XLSX.utils.sheet_to_json(sheet); // Convert to JSON
-        saveData(); // Save to Local Storage
+        excelData = XLSX.utils.sheet_to_json(sheet);
+        saveData();
+        shuffleData();
+        drawWheel();
     };
 
     reader.readAsArrayBuffer(file);
 });
 
-// Save Data to Local Storage
+// Save data
 function saveData() {
     localStorage.setItem("excelData", JSON.stringify(excelData));
 }
 
-let currentDeg = 0
-let step = 360/excelData.length
-let colors = []
-let itemDegs = {}
-let recievedItem = "";
+// Draw the wheel
+function drawWheel() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = canvas.width / 2;
+    const step = 360 / excelData.length;
 
-for(let i = 0 ; i < excelData.length + 1;i++){
-    colors.push(randomColor())
-}
-
-function createWheel(){
-    step = 360/excelData.length
-    colors = []
-    for(let i = 0 ; i < excelData.length + 1;i++){
-        colors.push(randomColor())
-    }
-    draw()
-}
-draw()
-
-function draw(){
-    ctx.clearRect(0, 0, width, height);
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, toRad(0), toRad(360))
-    ctx.fillStyle = `rgb(${33},${33},${33})`
-    ctx.lineTo(centerX, centerY);
-    ctx.fill()
-
-    let startDeg = currentDeg;
-    for(let i = 0 ; i < excelData.length; i++, startDeg += step){
-        let endDeg = startDeg + step
-
-        color = colors[i]
-        let colorStyle = `rgb(${color.r},${color.g},${color.b})`
+    let startAngle = 0;
+    for (let i = 0; i < excelData.length; i++, startAngle += step) {
+        let endAngle = startAngle + step;
+        let colorstyle = excelData[i].color || `hsl(${Math.random() * 360}, 80%, 60%)`;
 
         ctx.beginPath();
-        rad = toRad(360/step);
-        ctx.arc(centerX, centerY, radius - 2, toRad(startDeg), toRad(endDeg))
-        let colorStyle2 = `rgb(${color.r - 30},${color.g - 30},${color.b - 30})`
-        ctx.fillStyle = colorStyle2
-        ctx.lineTo(centerX, centerY);
-        ctx.fill()
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius - 2, toRad(startAngle), toRad(endAngle));
+        ctx.fillStyle = 'black';
+        ctx.fill();
+        ctx.stroke();
+
 
         ctx.beginPath();
-        rad = toRad(360/step);
-        ctx.arc(centerX, centerY, radius - 30, toRad(startDeg), toRad(endDeg))
-        ctx.fillStyle = colorStyle
-        ctx.lineTo(centerX, centerY);
-        ctx.fill()
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius - 3, toRad(startAngle), toRad(endAngle));
+        ctx.fillStyle = colorstyle;
+        ctx.fill();
+        ctx.stroke();
 
-        // draw text
+
+        // Draw text
         ctx.save();
         ctx.translate(centerX, centerY);
-        ctx.rotate(toRad((startDeg + endDeg)/2));
+        ctx.rotate(toRad(startAngle + step / 2));
         ctx.textAlign = "center";
-        if(color.r > 150 || color.g > 150 || color.b > 150){
-            ctx.fillStyle = "#000";
-        }
-        else{
-            ctx.fillStyle = "#fff";
-        }
-        ctx.font = 'bold 13px Pyidaungsu';
-        ctx.fillText(excelData[i].name, 470, 5);  // text places
+        ctx.fillStyle = "#fff";
+        ctx.font = "14px Arial";
+        ctx.fillText(excelData[i].name, radius * 0.7, 5);
         ctx.restore();
-
-        // check winner
-        if( startDeg%360 > 90 &&  endDeg % 360 < 90 ){
-                
-            document.getElementById("selectedItem").textContent = excelData[i].name
-            recievedItem = excelData[i].name
-        } 
-        
     }
 }
 
-// let speed = 0
-// let maxRotation = randomRange(360* 3, 360 * 6)
-// let pause = false
-// function animate(){
-    
-//     if(pause){
-//         return
-//     }
-//     speed = easeOutSine(getPercent(currentDeg ,maxRotation ,0)) * 20
-//     if(speed < 0.01){
-//         speed = 0
-//         pause = true
-//         document.getElementById("customModal").style.display = "flex";
-//         // applause.play();
-//     }
-//     currentDeg += speed
-//     // wheel.play();
-//     draw()
-//     window.requestAnimationFrame(animate);
-// }
-
-// function spin(){
-//     if(speed != 0){
-//         return
-//     }
-//     // wheel.play();
-//     currentDeg = 0
-//     maxRotation = randomRange(360*3, 360*6)
-//     createWheel()
-//     draw();
-//     pause = false
-//     window.requestAnimationFrame(animate);
-    
-// }
-
-// function closeModal() {
-//     document.getElementById("customModal").style.display = "none";
-// }
-
-// function recieveModal() {
-//     excelData = excelData.filter(data => data.name !== recievedItem); // Remove row
-//     document.getElementById("customModal").style.display = "none";
-//     localStorage.setItem("excelData", JSON.stringify(excelData));
-//     createWheel()
-//     draw();
-// }
-
-let spinDuration = 17000;
-let startTime = null;
-let finalRotation = 0;
-let pause = true;
-
-function animate(timestamp) {
-    if (!startTime) startTime = timestamp;
-    let elapsed = timestamp - startTime;
-    let progress = elapsed / spinDuration;
-
-    if (progress >= 1) {
-        currentDeg = finalRotation;
-        pause = true;
-        document.getElementById("customModal").style.display = "flex";
-        return;
-    }
-
-    let easedProgress = easeOutExpo(progress);
-    currentDeg = easedProgress * finalRotation;
-
-    draw();
-    console.log(`spinning: ${currentDeg}`);
-    
-    window.requestAnimationFrame(animate);
+// Convert degrees to radians
+function toRad(deg) {
+    return deg * (Math.PI / 180);
 }
 
+let totalRotation = 0;
+// Spin the wheel
 function spin() {
-    if (!pause) return;
+    
+    if (excelData.length === 0) return;
 
-    startTime = null;
-    finalRotation = randomRange(360 * 3, 360 * 6);
-    pause = false;
+    let fullSpins = 3; // At least 3 full spins
+    let extraRotation = Math.floor(Math.random() * 360); // Random stopping position
+    console.log(`Rotation: ${extraRotation}`)
+    let newRotation = (fullSpins * 360) + extraRotation;
+    let spinDuration = Math.random() * 5 + 5.5;
+    if (spinDuration >= 7){
+        wheel.src = src="assets/wheel7s-VEED.mp3"
+        wheel.play();
+    } else {
+        wheel.src = src="assets/wheel5s-VEED.mp3"
+        wheel.play();
+    }
 
-    window.requestAnimationFrame(animate);
+    totalRotation += newRotation; // Accumulate rotation
+
+    // console.log(`extraAngle: ${extraRotation}`);
+    // console.log(`finalAngle: ${totalRotation}`);
+    console.log(`spin duration: ${spinDuration}`);
+
+    wheelWrapper.style.transition = `transform ${spinDuration}s cubic-bezier(0,0,0,1)`;
+    wheelWrapper.style.transform = `rotate(${totalRotation}deg)`;
+
+    setTimeout(() => {
+        currentAngle = totalRotation  % 360;
+        let step = 360 / excelData.length;
+        let winningIndex = Math.floor((360 - currentAngle) / step) % excelData.length;
+        selectedItem = excelData[winningIndex];
+
+        document.getElementById("selectedItem").textContent = selectedItem.name;
+        document.getElementById("customModal").style.display = "block";
+        document.getElementById("selectedItem").style.color = selectedItem.color;
+        
+        // console.log(`Current angle: ${currentAngle}`)
+        const count = 200,
+        defaults = {
+            origin: { y: 0.7 },
+        };
+
+        function fire(particleRatio, opts) {
+        confetti(
+            Object.assign({}, defaults, opts, {
+            particleCount: Math.floor(count * particleRatio),
+            })
+        );
+        }
+
+        fire(0.25, {
+        spread: 26,
+        startVelocity: 55,
+        });
+
+        fire(0.2, {
+        spread: 60,
+        });
+
+        fire(0.35, {
+        spread: 100,
+        decay: 0.91,
+        scalar: 0.8,
+        });
+
+        fire(0.1, {
+        spread: 120,
+        startVelocity: 25,
+        decay: 0.92,
+        scalar: 1.2,
+        });
+
+        fire(0.1, {
+        spread: 120,
+        startVelocity: 45,
+        });
+        applause.play();
+    }, spinDuration * 1000);
+
+    // currentAngle = finalAngle;
 }
 
+// Close modal
 function closeModal() {
     document.getElementById("customModal").style.display = "none";
 }
 
+// Remove received item and redraw
 function recieveModal() {
-    excelData = excelData.filter(data => data.name !== recievedItem);
-    document.getElementById("customModal").style.display = "none";
+    excelData = excelData.filter(item => item.name !== selectedItem.name);
     saveData();
-    createWheel();
+    drawWheel();
+    closeModal();
 }
+
